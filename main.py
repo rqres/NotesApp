@@ -4,7 +4,6 @@ from datetime import datetime
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
-from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
 
 notes = []
@@ -47,6 +46,14 @@ class Note:
                 return note
         return None
 
+    @staticmethod
+    def find_note_label_by_text(lst, text):
+        for item in lst:
+            if item.text == text:
+                return item
+
+        return None
+
 
 class MyTestApp(App):
     def __init__(self):
@@ -76,8 +83,11 @@ class MyTestApp(App):
         split_layout = BoxLayout(spacing=10, size_hint=(1, .95))
 
         for note in notes:
-            lb = Label(text=note.file_path)
-            self.list_of_notes_box.add_widget(lb)
+            btn = Button(text=note.file_path, on_press=self.open_note)
+            self.list_of_notes_box.add_widget(btn)
+            # print(lb.text)
+
+        # print("children" + str(self.list_of_notes_box.children[0].text))
 
         split_layout.add_widget(self.list_of_notes_box)
         split_layout.add_widget(self.text_input)
@@ -100,7 +110,7 @@ class MyTestApp(App):
             with open(self.current_note.file_path, 'x') as f:
                 print(self.current_note.file_path + ": new note created !")
                 f.close()
-            self.list_of_notes_box.add_widget(Label(text=self.current_note.file_path))
+            self.list_of_notes_box.add_widget(Button(text=self.current_note.file_path, on_press=self.open_note))
         except FileExistsError:
             print("This file already exists, cannot create new one")
 
@@ -112,12 +122,19 @@ class MyTestApp(App):
             notes.remove(Note.get_note_object_by_id(current_note_index))
             current_note_index -= 1
             self.current_note = Note.get_note_object_by_id(current_note_index)
-            with open(self.current_note.file_path, 'r') as f:
-                self.text_input.text = f.read()
-                f.close()
+            self.list_of_notes_box.remove_widget(Note.find_note_label_by_text(self.list_of_notes_box.children, target))
+            if self.current_note is not None:
+                with open(self.current_note.file_path, 'r') as f:
+                    self.text_input.text = f.read()
+                    f.close()
+            else:
+                self.text_input.text = ''
             print(target + " successfully deleted!")
         else:
             print("The file " + target + " does not exist")
+
+    def open_note(self, instance):
+        pass
 
 
 if __name__ == '__main__':
